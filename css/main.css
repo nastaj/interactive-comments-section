@@ -78,4 +78,145 @@ select {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+body {
+  background-color: hsl(223, 19%, 93%);
+  font-family: "Rubik", sans-serif;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.parent-post,
+.reply-post {
+  display: flex;
+  gap: 2.4rem;
+  background-color: hsl(0, 0%, 100%);
+  padding: 2.4rem 3.2rem;
+  border-radius: 0.8rem;
+  min-height: 16rem;
+  max-width: 74rem;
+  margin-bottom: 1.6rem;
+}
+
+.reply-post {
+  max-width: 64.7rem;
+}
+
+.replies-container {
+  margin-left: 4.8rem;
+  padding-left: 4.4rem;
+  border-left: 1px solid hsla(212, 24%, 26%, 0.2);
+}
+
+.score-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: hsl(228, 33%, 97%);
+  border-radius: 0.8rem;
+  height: 9.6rem;
+  padding: 0.4rem 0.4rem;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  border: none;
+  background: none;
+  cursor: pointer;
+  width: 2.8rem;
+}
+
+.score {
+  font-size: 16px;
+  color: hsl(238, 40%, 52%);
+  font-weight: 500;
+}
+
+.post-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.post-header,
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.post-header {
+  justify-content: space-between;
+}
+
+.avatar {
+  height: 3.2rem;
+}
+
+.author {
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.date {
+  font-size: 1.4rem;
+  color: hsl(211, 10%, 45%);
+}
+
+.comment {
+  font-size: 16px;
+  color: hsl(211, 10%, 45%);
+}
+
+.btn-container {
+  gap: 1.4rem;
+  display: flex;
+}
+
+.btn-reply,
+.btn-edit,
+.btn-delete {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  font-size: 1.4rem;
+  gap: 0.8rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.btn-reply,
+.btn-edit {
+  right: 2rem;
+  color: hsl(238, 40%, 52%);
+}
+
+.btn-delete {
+  right: 10rem;
+  color: hsl(358, 79%, 66%);
+}
+
+.replying-to {
+  color: hsl(238, 40%, 52%);
+  font-weight: 500;
+}
+
+.author-own {
+  font-size: 1.4rem;
+  color: hsl(0, 0%, 100%);
+  font-weight: 500;
+  background-color: hsl(238, 40%, 52%);
+  padding: 0 0.6rem;
 }/*# sourceMappingURL=main.css.map */
