@@ -26,14 +26,16 @@ renderComments();
 // Markup
 const generateCommentMarkup = function (comment) {
   const markup = `
-  <section class="post" author="${comment.user.username}">
+  <section class="post" author="${comment.user.username}" data-post-id=${
+    comment.id
+  }>
     <section class="parent-post">
       <div class="score-container">
         <button class="btn btn-plus">
           <img src="img/icon-plus.svg" alt="Plus icon" />
         </button>
         <p class="score">${comment.score}</p>
-        <button class="btn btn-plus">
+        <button class="btn btn-minus">
           <img src="img/icon-minus.svg" alt="Minus icon" />
         </button>
       </div>
@@ -68,13 +70,13 @@ const generateCommentMarkup = function (comment) {
     ${comment.replies
       .map((reply) => {
         return `
-        <section class="reply-post" id="${reply.id}">
+        <section class="post reply-post" data-post-id="${reply.id}">
           <div class="score-container">
             <button class="btn btn-plus">
               <img src="img/icon-plus.svg" alt="Plus icon" />
             </button>
             <p class="score">${reply.score}</p>
-            <button class="btn btn-plus">
+            <button class="btn btn-minus">
               <img src="img/icon-minus.svg" alt="Minus icon" />
             </button>
           </div>
@@ -113,3 +115,49 @@ const generateCommentMarkup = function (comment) {
 
   appContainer.insertAdjacentHTML("afterbegin", markup);
 };
+
+// Scores
+const setScore = async function () {
+  await loadData();
+
+  const scoreContainer = document.querySelectorAll(".score-container");
+  scoreContainer.forEach((score) =>
+    score.addEventListener("click", (e) => {
+      // Refactor this mess later
+      const currentComment = comments.find(
+        (comment) =>
+          comment.id === +e.currentTarget.closest(".post").dataset.postId
+      );
+      const scoreEl = e.currentTarget.querySelector(".score");
+      const btnPlus = e.target.closest(".btn-plus");
+      const btnMinus = e.target.closest(".btn-minus");
+
+      if (!currentComment) {
+        let [currentReply] = comments.map((comment) => {
+          return comment.replies.find(
+            (reply) =>
+              reply.id === +e.currentTarget.closest(".post").dataset.postId
+          );
+        });
+
+        if (btnPlus) {
+          currentReply.score++;
+        }
+        if (btnMinus) {
+          currentReply.score--;
+        }
+        scoreEl.textContent = currentReply.score;
+        return;
+      }
+
+      if (btnPlus) {
+        currentComment.score++;
+      }
+      if (btnMinus) {
+        currentComment.score--;
+      }
+      scoreEl.textContent = currentComment.score;
+    })
+  );
+};
+setScore();
