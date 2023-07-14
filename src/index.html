@@ -9,10 +9,10 @@
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="./images/favicon-32x32.png"
+      href="./img/favicon-32x32.png"
     />
-    <link rel="stylesheet" href="css/main.css" />
-    <script defer src="js/script.js"></script>
+    <link rel="stylesheet" href="../dist/css/main.css" />
+    <script type="module" src="js/controller.js"></script>
 
     <title>Frontend Mentor | Interactive comments section</title>
   </head>
@@ -26,11 +26,11 @@
             <!-- SCORE -->
             <div class="score-container">
               <button class="btn btn-plus">
-                <img src="images/icon-plus.svg" alt="Plus icon" />
+                <img src="img/icon-plus.svg" alt="Plus icon" />
               </button>
               <p class="score">5</p>
               <button class="btn btn-plus">
-                <img src="images/icon-minus.svg" alt="Minus icon" />
+                <img src="img/icon-minus.svg" alt="Minus icon" />
               </button>
             </div>
 
@@ -41,7 +41,7 @@
                 <div class="user-info">
                   <img
                     class="avatar"
-                    src="images/avatars/image-maxblagun.webp"
+                    src="img/avatars/image-maxblagun.webp"
                     alt="User avatar"
                   />
                   <p class="author">maxblagun</p>
@@ -49,7 +49,7 @@
                 </div>
 
                 <button class="btn-reply">
-                  <img src="images/icon-reply.svg" alt="Reply icon" />
+                  <img src="img/icon-reply.svg" alt="Reply icon" />
                   Reply
                 </button>
               </header>
@@ -72,11 +72,11 @@
             <section class="reply-post">
               <div class="score-container">
                 <button class="btn btn-plus">
-                  <img src="images/icon-plus.svg" alt="Plus icon" />
+                  <img src="img/icon-plus.svg" alt="Plus icon" />
                 </button>
                 <p class="score">4</p>
                 <button class="btn btn-plus">
-                  <img src="images/icon-minus.svg" alt="Minus icon" />
+                  <img src="img/icon-minus.svg" alt="Minus icon" />
                 </button>
               </div>
 
@@ -85,7 +85,7 @@
                   <div class="user-info">
                     <img
                       class="avatar"
-                      src="images/avatars/image-ramsesmiron.webp"
+                      src="img/avatars/image-ramsesmiron.webp"
                       alt="User avatar"
                     />
                     <p class="author">ramsesmiron</p>
@@ -93,7 +93,7 @@
                   </div>
 
                   <button class="btn-reply">
-                    <img src="images/icon-reply.svg" alt="Reply icon" />
+                    <img src="img/icon-reply.svg" alt="Reply icon" />
                     Reply
                   </button>
                 </header>
@@ -114,11 +114,11 @@
             <section class="reply-post own-post">
               <div class="score-container">
                 <button class="btn btn-plus">
-                  <img src="images/icon-plus.svg" alt="Plus icon" />
+                  <img src="img/icon-plus.svg" alt="Plus icon" />
                 </button>
                 <p class="score">2</p>
                 <button class="btn btn-plus">
-                  <img src="images/icon-minus.svg" alt="Minus icon" />
+                  <img src="img/icon-minus.svg" alt="Minus icon" />
                 </button>
               </div>
 
@@ -127,7 +127,7 @@
                   <div class="user-info">
                     <img
                       class="avatar"
-                      src="images/avatars/image-juliusomo.webp"
+                      src="img/avatars/image-juliusomo.webp"
                       alt="User avatar"
                     />
                     <p class="author">juliusomo</p>
@@ -136,11 +136,11 @@
                   </div>
                   <div class="btn-container">
                     <button class="btn-delete">
-                      <img src="images/icon-delete.svg" alt="Reply icon" />
+                      <img src="img/icon-delete.svg" alt="Reply icon" />
                       Delete
                     </button>
                     <button class="btn-edit">
-                      <img src="images/icon-edit.svg" alt="Reply icon" />
+                      <img src="img/icon-edit.svg" alt="Reply icon" />
                       Edit
                     </button>
                   </div>
@@ -157,6 +157,24 @@
                 </div>
               </div>
             </section>
+          </section>
+        </section>
+
+        <section class="add-comment">
+          <section class="parent-post">
+            <img
+              class="avatar"
+              src="img/avatars/image-juliusomo.webp"
+              alt="User avatar"
+            />
+            <form class="comment-form" action="#">
+              <input
+                class="comment-input"
+                type="text"
+                placeholder="Add a comment..."
+              />
+              <button class="btn-submit" type="submit">Send</button>
+            </form>
           </section>
         </section>
       </div>
