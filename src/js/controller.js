@@ -19,16 +19,10 @@ const loadData = async function () {
   comments.sort((a, b) => a.score - b.score);
 };
 
-// Rendering
-const renderComments = async function () {
-  await loadData();
-  comments.forEach((comment) => generateCommentMarkup(comment));
-};
-renderComments();
-
-// Markup
-const generateCommentMarkup = function (comment, position = "afterbegin") {
-  const markup = `
+loadData().then(function () {
+  // Markup
+  const generateCommentMarkup = function (comment, position = "afterbegin") {
+    const markup = `
   ${
     comment.user === currentUser
       ? `
@@ -195,70 +189,148 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
     </section>
   `;
 
-  appContainer.insertAdjacentHTML(position, markup);
-};
-
-// Scores
-const setScore = async function () {
-  await loadData();
-
-  const scoreContainer = document.querySelectorAll(".score-container");
-  scoreContainer.forEach((score) =>
-    score.addEventListener("click", (e) => {
-      console.log("Click");
-      // Refactor this mess later
-      const currentComment = comments.find(
-        (comment) =>
-          comment.id === +e.currentTarget.closest(".post").dataset.postId
-      );
-      const scoreEl = e.currentTarget.querySelector(".score");
-      const btnPlus = e.target.closest(".btn-plus");
-      const btnMinus = e.target.closest(".btn-minus");
-
-      if (!currentComment) {
-        let [currentReply] = comments.map((comment) => {
-          return comment.replies.find(
-            (reply) =>
-              reply.id === +e.currentTarget.closest(".post").dataset.postId
-          );
-        });
-
-        if (btnPlus) {
-          currentReply.score++;
-        }
-        if (btnMinus) {
-          currentReply.score--;
-        }
-        scoreEl.textContent = currentReply.score;
-        return;
-      }
-
-      if (btnPlus) {
-        currentComment.score++;
-      }
-      if (btnMinus) {
-        currentComment.score--;
-      }
-      scoreEl.textContent = currentComment.score;
-    })
-  );
-};
-setScore();
-
-newCommentForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const newComment = {
-    id: Math.trunc(Math.random() * 100),
-    content: newCommentInput.value,
-    createdAt: "Now",
-    replies: [],
-    score: 0,
-    user: currentUser,
+    appContainer.insertAdjacentHTML(position, markup);
   };
 
-  newCommentInput.value = "";
-  comments.push(newComment);
+  const generateReplyMarkup = function () {
+    return `
+  <section class="add-comment">
+      <section class="parent-post">
+        <img
+          class="avatar"
+          src="img/avatars/image-juliusomo.webp"
+          alt="User avatar"
+        />
+        <form class="comment-form reply-form" action="#">
+          <input
+            class="comment-input"
+            type="text"
+            placeholder="Add a comment..."
+          />
+          <button class="btn-submit" type="submit">Reply</button>
+        </form>
+      </section>
+    </section>
+  `;
+  };
 
-  generateCommentMarkup(newComment);
+  // Rendering
+  const renderComments = function () {
+    comments.forEach((comment) => generateCommentMarkup(comment));
+  };
+  renderComments();
+
+  // Scores
+  const handleScore = function () {
+    const scoreContainer = document.querySelectorAll(".score-container");
+    scoreContainer.forEach((score) =>
+      score.addEventListener("click", (e) => {
+        // Refactor this mess later
+        const currentComment = comments.find(
+          (comment) =>
+            comment.id === +e.currentTarget.closest(".post").dataset.postId
+        );
+        const scoreEl = e.currentTarget.querySelector(".score");
+        const btnPlus = e.target.closest(".btn-plus");
+        const btnMinus = e.target.closest(".btn-minus");
+
+        if (!currentComment) {
+          let [currentReply] = comments.map((comment) => {
+            return comment.replies.find(
+              (reply) =>
+                reply.id === +e.currentTarget.closest(".post").dataset.postId
+            );
+          });
+
+          if (btnPlus) {
+            currentReply.score++;
+          }
+          if (btnMinus) {
+            currentReply.score--;
+          }
+          scoreEl.textContent = currentReply.score;
+          return;
+        }
+
+        if (btnPlus) {
+          currentComment.score++;
+        }
+        if (btnMinus) {
+          currentComment.score--;
+        }
+        scoreEl.textContent = currentComment.score;
+      })
+    );
+  };
+  handleScore();
+
+  newCommentForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const newComment = {
+      id: Math.trunc(Math.random() * 100),
+      content: newCommentInput.value,
+      createdAt: "Now",
+      replies: [],
+      score: 0,
+      user: currentUser,
+    };
+
+    newCommentInput.value = "";
+    comments.push(newComment);
+
+    generateCommentMarkup(newComment);
+  });
+
+  const handleReplies = function () {
+    const replyBtn = document.querySelectorAll(".btn-reply");
+    replyBtn.forEach((btn) =>
+      btn.addEventListener("click", (e) => {
+        const parentElement = e.target.closest(".post");
+        const replyingToId = parentElement.dataset.postId;
+
+        parentElement.insertAdjacentHTML("afterend", generateReplyMarkup());
+
+        const replyForm = document.querySelector(".reply-form");
+        const replyInput = replyForm.querySelector(".comment-input");
+        const receiverOP = comments.find(
+          (comment) => comment.id === +replyingToId
+        );
+        const [receiverReplier] = comments.map((comment) => {
+          return comment.replies.find((reply) => reply.id === +replyingToId);
+        });
+
+        const originalPoster = comments.find(
+          (comment) => comment.id === receiverReplier?.originalPosterId
+        );
+
+        replyForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const newReply = {
+            id: Math.trunc(Math.random() * 100),
+            content: replyInput.value,
+            createdAt: "Now",
+            replyingTo: receiverOP
+              ? receiverOP.user.username
+              : receiverReplier.user.username,
+            score: 0,
+            user: currentUser,
+          };
+
+          receiverOP
+            ? receiverOP.replies.push(newReply)
+            : originalPoster.replies.push(newReply);
+
+          appContainer.innerHTML = "";
+          comments.forEach((comment) => generateCommentMarkup(comment));
+
+          // Rebuild handlers
+          handleScore();
+          handleReplies();
+        });
+      })
+    );
+  };
+  handleReplies();
 });
