@@ -1,5 +1,6 @@
 // HTML Elements
 const appContainer = document.querySelector(".container");
+const postsContainer = document.querySelector(".posts-container");
 const newCommentForm = document.querySelector(".comment-form");
 const newCommentInput = document.querySelector(".comment-input");
 const newCommentBtn = document.querySelector(".btn-submit");
@@ -189,7 +190,7 @@ loadData().then(function () {
     </section>
   `;
 
-    appContainer.insertAdjacentHTML(position, markup);
+    postsContainer.insertAdjacentHTML(position, markup);
   };
 
   const generateReplyMarkup = function () {
@@ -278,6 +279,9 @@ loadData().then(function () {
   });
 
   const handleReply = function (e) {
+    const btn = document.querySelectorAll(".btn-reply");
+    btn.forEach((btn) => (btn.disabled = true));
+
     const parentElement = e.target.closest(".post");
     const replyingToId = parentElement.dataset.postId;
 
@@ -312,7 +316,7 @@ loadData().then(function () {
         ? receiverOP.replies.push(newReply)
         : originalPoster.replies.push(newReply);
 
-      appContainer.innerHTML = "";
+      postsContainer.innerHTML = "";
       comments.forEach((comment) => generateCommentMarkup(comment));
 
       // Rebuild handlers
