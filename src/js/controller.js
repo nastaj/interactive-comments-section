@@ -20,10 +20,75 @@ const loadData = async function () {
   comments.sort((a, b) => a.score - b.score);
 };
 
-loadData().then(function () {
-  // Markup
-  const generateCommentMarkup = function (comment, position = "afterbegin") {
-    const markup = `
+const app = async function () {
+  await loadData();
+
+  class App {
+    #currentUser = currentUser;
+    #comments = comments;
+    #target;
+    #parentElement;
+
+    constructor() {
+      this._addHandlers();
+    }
+
+    _addHandlers() {
+      const scoreContainer = document.querySelectorAll(".score-container");
+      const deleteBtn = document.querySelectorAll(".btn-delete");
+      const replyBtn = document.querySelectorAll(".btn-reply");
+
+      scoreContainer.forEach((score) =>
+        score.addEventListener("click", handleScore)
+      );
+      deleteBtn.forEach((btn) => btn.addEventListener("click", handleDelete));
+      replyBtn.forEach((btn) => btn.addEventListener("click", handleReply));
+    }
+
+    _handleScore() {
+      this.#target = e.target;
+      this.#parentElement = e.currentTarget;
+
+      const currentComment = comments.find(
+        (comment) =>
+          comment.id === +this.#parentElement.closest(".post").dataset.postId
+      );
+      const scoreEl = this.#parentElement.querySelector(".score");
+      const btnPlus = this.#target.closest(".btn-plus");
+      const btnMinus = this.#target.closest(".btn-minus");
+
+      if (!currentComment) {
+        let [currentReply] = comments.map((comment) => {
+          return comment.replies.find(
+            (reply) =>
+              reply.id === +this.#parentElement.closest(".post").dataset.postId
+          );
+        });
+
+        if (btnPlus) {
+          currentReply.score += 1;
+        }
+        if (btnMinus) {
+          currentReply.score -= 1;
+        }
+        scoreEl.textContent = currentReply.score;
+        return;
+      }
+
+      if (btnPlus) {
+        currentComment.score += 1;
+      }
+      if (btnMinus) {
+        currentComment.score -= 1;
+      }
+      scoreEl.textContent = currentComment.score;
+    }
+  }
+};
+
+// Markup
+const generateCommentMarkup = function (comment, position = "afterbegin") {
+  const markup = `
   ${
     comment.user === currentUser
       ? `
@@ -190,11 +255,11 @@ loadData().then(function () {
     </section>
   `;
 
-    postsContainer.insertAdjacentHTML(position, markup);
-  };
+  postsContainer.insertAdjacentHTML(position, markup);
+};
 
-  const generateReplyMarkup = function () {
-    return `
+const generateReplyMarkup = function () {
+  return `
   <section class="add-comment">
       <section class="parent-post">
         <img
@@ -213,149 +278,144 @@ loadData().then(function () {
       </section>
     </section>
   `;
-  };
+};
 
-  // Rendering
-  const renderComments = function () {
-    comments.forEach((comment) => generateCommentMarkup(comment));
-  };
-  renderComments();
+// Rendering
+const renderComments = function () {
+  comments.forEach((comment) => generateCommentMarkup(comment));
+};
+renderComments();
 
-  // Scores
-  const handleScore = function (e) {
-    // Refactor this mess later
-    const currentComment = comments.find(
-      (comment) =>
-        comment.id === +e.currentTarget.closest(".post").dataset.postId
-    );
-    const scoreEl = e.currentTarget.querySelector(".score");
-    const btnPlus = e.target.closest(".btn-plus");
-    const btnMinus = e.target.closest(".btn-minus");
+// Scores
+const handleScore = function (e) {
+  // Refactor this mess later
+  const currentComment = comments.find(
+    (comment) => comment.id === +e.currentTarget.closest(".post").dataset.postId
+  );
+  const scoreEl = e.currentTarget.querySelector(".score");
+  const btnPlus = e.target.closest(".btn-plus");
+  const btnMinus = e.target.closest(".btn-minus");
 
-    if (!currentComment) {
-      let [currentReply] = comments.map((comment) => {
-        return comment.replies.find(
-          (reply) =>
-            reply.id === +e.currentTarget.closest(".post").dataset.postId
-        );
-      });
-
-      if (btnPlus) {
-        currentReply.score += 1;
-      }
-      if (btnMinus) {
-        currentReply.score -= 1;
-      }
-      scoreEl.textContent = currentReply.score;
-      return;
-    }
+  if (!currentComment) {
+    let [currentReply] = comments.map((comment) => {
+      return comment.replies.find(
+        (reply) => reply.id === +e.currentTarget.closest(".post").dataset.postId
+      );
+    });
 
     if (btnPlus) {
-      currentComment.score += 1;
+      currentReply.score += 1;
     }
     if (btnMinus) {
-      currentComment.score -= 1;
+      currentReply.score -= 1;
     }
-    scoreEl.textContent = currentComment.score;
+    scoreEl.textContent = currentReply.score;
+    return;
+  }
+
+  if (btnPlus) {
+    currentComment.score += 1;
+  }
+  if (btnMinus) {
+    currentComment.score -= 1;
+  }
+  scoreEl.textContent = currentComment.score;
+};
+
+newCommentForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const newComment = {
+    id: Math.trunc(Math.random() * 100),
+    content: newCommentInput.value,
+    createdAt: "Now",
+    replies: [],
+    score: 0,
+    user: currentUser,
   };
 
-  newCommentForm.addEventListener("submit", (e) => {
+  newCommentInput.value = "";
+  comments.push(newComment);
+
+  generateCommentMarkup(newComment);
+  addHandlers();
+});
+
+const handleReply = function (e) {
+  const btn = document.querySelectorAll(".btn-reply");
+  btn.forEach((btn) => (btn.disabled = true));
+
+  const parentElement = e.target.closest(".post");
+  const replyingToId = parentElement.dataset.postId;
+
+  parentElement.insertAdjacentHTML("afterend", generateReplyMarkup());
+
+  const replyForm = document.querySelector(".reply-form");
+  const replyInput = replyForm.querySelector(".comment-input");
+  const receiverOP = comments.find((comment) => comment.id === +replyingToId);
+  const [receiverReplier] = comments.map((comment) => {
+    return comment.replies.find((reply) => reply.id === +replyingToId);
+  });
+
+  const originalPoster = comments.find(
+    (comment) => comment.id === receiverReplier?.originalPosterId
+  );
+
+  replyForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const newComment = {
+    const newReply = {
       id: Math.trunc(Math.random() * 100),
-      content: newCommentInput.value,
+      content: replyInput.value,
       createdAt: "Now",
-      replies: [],
+      replyingTo: receiverOP
+        ? receiverOP.user.username
+        : receiverReplier.user.username,
       score: 0,
       user: currentUser,
     };
 
-    newCommentInput.value = "";
-    comments.push(newComment);
+    receiverOP
+      ? receiverOP.replies.push(newReply)
+      : originalPoster.replies.push(newReply);
 
-    generateCommentMarkup(newComment);
+    postsContainer.innerHTML = "";
+    comments.forEach((comment) => generateCommentMarkup(comment));
+
+    // Rebuild handlers
     addHandlers();
   });
+};
 
-  const handleReply = function (e) {
-    const btn = document.querySelectorAll(".btn-reply");
-    btn.forEach((btn) => (btn.disabled = true));
-
-    const parentElement = e.target.closest(".post");
-    const replyingToId = parentElement.dataset.postId;
-
-    parentElement.insertAdjacentHTML("afterend", generateReplyMarkup());
-
-    const replyForm = document.querySelector(".reply-form");
-    const replyInput = replyForm.querySelector(".comment-input");
-    const receiverOP = comments.find((comment) => comment.id === +replyingToId);
-    const [receiverReplier] = comments.map((comment) => {
-      return comment.replies.find((reply) => reply.id === +replyingToId);
-    });
-
-    const originalPoster = comments.find(
-      (comment) => comment.id === receiverReplier?.originalPosterId
+const handleDelete = function (e) {
+  const parentElement = e.target.closest(".post");
+  const [post] = comments.map((comment) => {
+    return comment.replies.find(
+      (reply) => +parentElement.dataset.postId === reply.id
     );
-
-    replyForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const newReply = {
-        id: Math.trunc(Math.random() * 100),
-        content: replyInput.value,
-        createdAt: "Now",
-        replyingTo: receiverOP
-          ? receiverOP.user.username
-          : receiverReplier.user.username,
-        score: 0,
-        user: currentUser,
-      };
-
-      receiverOP
-        ? receiverOP.replies.push(newReply)
-        : originalPoster.replies.push(newReply);
-
-      postsContainer.innerHTML = "";
-      comments.forEach((comment) => generateCommentMarkup(comment));
-
-      // Rebuild handlers
-      addHandlers();
-    });
-  };
-
-  const handleDelete = function (e) {
-    const parentElement = e.target.closest(".post");
-    const [post] = comments.map((comment) => {
-      return comment.replies.find(
-        (reply) => +parentElement.dataset.postId === reply.id
-      );
-    });
-    const [postIndex] = comments.map((comment) => {
-      return comment.replies.findIndex(
-        (reply) => +parentElement.dataset.postId === reply.id
-      );
-    });
-
-    comments.forEach((comment) => {
-      comment.replies.includes(post)
-        ? comment.replies.splice(postIndex, 1)
-        : "";
-    });
-
-    parentElement.remove();
-  };
-
-  const addHandlers = function () {
-    const scoreContainer = document.querySelectorAll(".score-container");
-    const deleteBtn = document.querySelectorAll(".btn-delete");
-    const replyBtn = document.querySelectorAll(".btn-reply");
-
-    scoreContainer.forEach((score) =>
-      score.addEventListener("click", handleScore)
+  });
+  const [postIndex] = comments.map((comment) => {
+    return comment.replies.findIndex(
+      (reply) => +parentElement.dataset.postId === reply.id
     );
-    deleteBtn.forEach((btn) => btn.addEventListener("click", handleDelete));
-    replyBtn.forEach((btn) => btn.addEventListener("click", handleReply));
-  };
-  addHandlers();
-});
+  });
+
+  comments.forEach((comment) => {
+    comment.replies.includes(post) ? comment.replies.splice(postIndex, 1) : "";
+  });
+
+  parentElement.remove();
+};
+
+const addHandlers = function () {
+  const scoreContainer = document.querySelectorAll(".score-container");
+  const deleteBtn = document.querySelectorAll(".btn-delete");
+  const replyBtn = document.querySelectorAll(".btn-reply");
+
+  scoreContainer.forEach((score) =>
+    score.addEventListener("click", handleScore)
+  );
+  deleteBtn.forEach((btn) => btn.addEventListener("click", handleDelete));
+  replyBtn.forEach((btn) => btn.addEventListener("click", handleReply));
+};
+addHandlers();
