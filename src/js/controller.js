@@ -49,6 +49,7 @@ const main = async function () {
       const scoreContainer = document.querySelectorAll(".score-container");
       const deleteBtn = document.querySelectorAll(".btn-delete");
       const replyBtn = document.querySelectorAll(".btn-reply");
+      const editBtn = document.querySelectorAll(".btn-edit");
 
       scoreContainer.forEach((score) =>
         score.addEventListener("click", this._handleScore.bind(this))
@@ -58,6 +59,9 @@ const main = async function () {
       );
       replyBtn.forEach((btn) =>
         btn.addEventListener("click", this._handleReply.bind(this))
+      );
+      editBtn.forEach((btn) =>
+        btn.addEventListener("click", this._handleEdit.bind(this))
       );
     }
 
@@ -195,6 +199,68 @@ const main = async function () {
       });
     }
 
+    _handleEdit(e) {
+      this.#parentElement = e.target.closest(".post");
+      const editBtn = e.currentTarget;
+      const applyBtn = this.#parentElement.querySelector(".btn-apply");
+      const commentEl = this.#parentElement.querySelector(".comment");
+      const commentId = +this.#parentElement.dataset.postId;
+
+      const comment = this.#comments.find(
+        (comment) => comment.id === commentId
+      ) || [
+        ...this.#comments.map((comment) =>
+          comment.replies.find((reply) => reply.id === commentId)
+        ),
+      ];
+      const commentIndex = this.#comments.findIndex(
+        (comment) => comment.id === commentId
+      );
+      const [replyIndex] = this.#comments.map((comm) => {
+        return comm.replies.findIndex((reply) => reply.id == commentId);
+      });
+
+      commentEl.setAttribute("contenteditable", true);
+
+      editBtn.classList.add("hidden");
+      applyBtn.classList.remove("hidden");
+
+      applyBtn.addEventListener(
+        "click",
+        () => {
+          commentEl.setAttribute("contenteditable", false);
+
+          editBtn.classList.remove("hidden");
+          applyBtn.classList.add("hidden");
+
+          const newContent = commentEl.textContent
+            .trim()
+            .split("\n              ")
+            .slice(1)
+            .join("");
+
+          console.log(this.#comments.includes(comment));
+
+          if (this.#comments.includes(comment)) {
+            this.#comments[commentIndex].content = commentEl.textContent;
+          }
+
+          if (!this.#comments.includes(comment)) {
+            this.#comments.forEach(
+              (comm) =>
+                comm.replies.includes(comment[0]) &&
+                (comm.replies[replyIndex].content = newContent)
+            );
+          }
+          console.log(this.#comments);
+          console.log(newContent);
+        },
+        {
+          once: true,
+        }
+      );
+    }
+
     _generateCommentMarkup(comment, position = "afterbegin") {
       const markup = `
   ${
@@ -228,6 +294,10 @@ const main = async function () {
         <button class="btn-edit">
           <img src="img/icon-edit.svg" alt="Reply icon" />
           Edit
+        </button>
+        <button class="btn-apply hidden">
+          <img src="img/icon-edit.svg" alt="Reply icon" />
+          Apply
         </button>
       </div>
     </header>
@@ -328,6 +398,10 @@ const main = async function () {
             <button class="btn-edit">
               <img src="img/icon-edit.svg" alt="Reply icon" />
               Edit
+            </button>
+            <button class="btn-apply hidden">
+              <img src="img/icon-edit.svg" alt="Reply icon" />
+              Apply
             </button>
           </div>
         </header>

@@ -105,7 +105,8 @@ body {
 
 .btn-reply,
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-apply {
   display: flex;
   align-items: center;
   font-weight: $font-weight--medium;
@@ -117,7 +118,8 @@ body {
 }
 
 .btn-reply,
-.btn-edit {
+.btn-edit,
+.btn-apply {
   right: 2rem;
   color: $blue-moderate;
 }
@@ -158,4 +160,8 @@ body {
   padding: 1rem 2.4rem;
   border-radius: 0.8rem;
   cursor: pointer;
+}
+
+.hidden {
+  display: none;
 }
