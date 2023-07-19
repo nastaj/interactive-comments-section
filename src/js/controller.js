@@ -15,12 +15,10 @@ const loadData = async function () {
 
   currentUser = data.currentUser;
   comments = data.comments;
-
-  // Sort comments by score
-  comments.sort((a, b) => a.score - b.score);
 };
 
-const app = async function () {
+// App
+const main = async function () {
   await loadData();
 
   class App {
@@ -30,7 +28,21 @@ const app = async function () {
     #parentElement;
 
     constructor() {
+      this._sortByScore();
+      this._renderComments();
       this._addHandlers();
+      newCommentForm.addEventListener(
+        "submit",
+        this._handleNewComment.bind(this)
+      );
+    }
+
+    _sortByScore() {
+      this.#comments.sort((a, b) => a.score - b.score);
+    }
+
+    _renderComments() {
+      this.#comments.forEach((comment) => this._generateCommentMarkup(comment));
     }
 
     _addHandlers() {
@@ -39,17 +51,21 @@ const app = async function () {
       const replyBtn = document.querySelectorAll(".btn-reply");
 
       scoreContainer.forEach((score) =>
-        score.addEventListener("click", handleScore)
+        score.addEventListener("click", this._handleScore.bind(this))
       );
-      deleteBtn.forEach((btn) => btn.addEventListener("click", handleDelete));
-      replyBtn.forEach((btn) => btn.addEventListener("click", handleReply));
+      deleteBtn.forEach((btn) =>
+        btn.addEventListener("click", this._handleDelete.bind(this))
+      );
+      replyBtn.forEach((btn) =>
+        btn.addEventListener("click", this._handleReply.bind(this))
+      );
     }
 
-    _handleScore() {
+    _handleScore(e) {
       this.#target = e.target;
       this.#parentElement = e.currentTarget;
 
-      const currentComment = comments.find(
+      const currentComment = this.#comments.find(
         (comment) =>
           comment.id === +this.#parentElement.closest(".post").dataset.postId
       );
@@ -58,7 +74,7 @@ const app = async function () {
       const btnMinus = this.#target.closest(".btn-minus");
 
       if (!currentComment) {
-        let [currentReply] = comments.map((comment) => {
+        let [currentReply] = this.#comments.map((comment) => {
           return comment.replies.find(
             (reply) =>
               reply.id === +this.#parentElement.closest(".post").dataset.postId
@@ -83,16 +99,110 @@ const app = async function () {
       }
       scoreEl.textContent = currentComment.score;
     }
-  }
-};
 
-// Markup
-const generateCommentMarkup = function (comment, position = "afterbegin") {
-  const markup = `
+    _handleNewComment(e) {
+      e.preventDefault();
+
+      const newComment = {
+        id: Math.trunc(Math.random() * 100),
+        content: newCommentInput.value,
+        createdAt: "Now",
+        replies: [],
+        score: 0,
+        user: this.#currentUser,
+      };
+
+      newCommentInput.value = "";
+      this.#comments.push(newComment);
+
+      this._generateCommentMarkup(newComment);
+      this._addHandlers();
+    }
+
+    _handleDelete(e) {
+      this.#parentElement = e.target.closest(".post");
+
+      const [post] = this.#comments.map((comment) => {
+        return comment.replies.find(
+          (reply) => +this.#parentElement.dataset.postId === reply.id
+        );
+      });
+      const [postIndex] = this.#comments.map((comment) => {
+        return comment.replies.findIndex(
+          (reply) => +this.#parentElement.dataset.postId === reply.id
+        );
+      });
+
+      this.#comments.forEach((comment) => {
+        comment.replies.includes(post)
+          ? comment.replies.splice(postIndex, 1)
+          : "";
+      });
+
+      this.#parentElement.remove();
+    }
+
+    _handleReply(e) {
+      const btn = document.querySelectorAll(".btn-reply");
+      btn.forEach((btn) => (btn.disabled = true));
+
+      this.#parentElement = e.target.closest(".post");
+      const replyingToId = this.#parentElement.dataset.postId;
+
+      this.#parentElement.insertAdjacentHTML(
+        "afterend",
+        this._generateReplyMarkup()
+      );
+
+      const replyForm = document.querySelector(".reply-form");
+      const replyInput = replyForm.querySelector(".comment-input");
+      const receiverOP = this.#comments.find(
+        (comment) => comment.id === +replyingToId
+      );
+      const [receiverReplier] = this.#comments.map((comment) => {
+        return comment.replies.find((reply) => reply.id === +replyingToId);
+      });
+
+      const originalPoster = this.#comments.find(
+        (comment) => comment.id === receiverReplier?.originalPosterId
+      );
+
+      replyForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const newReply = {
+          id: Math.trunc(Math.random() * 100),
+          content: replyInput.value,
+          createdAt: "Now",
+          replyingTo: receiverOP
+            ? receiverOP.user.username
+            : receiverReplier.user.username,
+          score: 0,
+          user: this.#currentUser,
+        };
+
+        receiverOP
+          ? receiverOP.replies.push(newReply)
+          : originalPoster.replies.push(newReply);
+
+        postsContainer.innerHTML = "";
+        this.#comments.forEach((comment) =>
+          this._generateCommentMarkup(comment)
+        );
+
+        // Rebuild handlers
+        this._addHandlers();
+      });
+    }
+
+    _generateCommentMarkup(comment, position = "afterbegin") {
+      const markup = `
   ${
     comment.user === currentUser
       ? `
-      <section class="post post-own" author="${comment.user.username}" data-post-id=${comment.id}>
+      <section class="post post-own" author="${
+        comment.user.username
+      }" data-post-id=${comment.id}>
     <section class="parent-post">
       <div class="score-container">
         <p class="score">${comment.score}</p>
@@ -103,10 +213,10 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
       <div class="user-info">
         <img
           class="avatar"
-          src="${currentUser.image.webp}"
+          src="${this.#currentUser.image.webp}"
           alt="User avatar"
         />
-        <p class="author">${currentUser.username}</p>
+        <p class="author">${this.#currentUser.username}</p>
         <p class="author-own">you</p>
         <p class="date">${comment.createdAt}</p>
       </div>
@@ -142,7 +252,7 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
             <img src="img/icon-minus.svg" alt="Minus icon" />
           </button>
         </div>
-  
+
         <div class="post-main">
           <header class="post-header">
             <div class="user-info">
@@ -154,13 +264,13 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
               <p class="author">${comment.user.username}</p>
               <p class="date">${comment.createdAt}</p>
             </div>
-  
+
             <button class="btn-reply">
               <img src="img/icon-reply.svg" alt="Reply icon" />
               Reply
             </button>
           </header>
-  
+
           <div class="comment-container">
             <p class="comment">
               ${comment.content}
@@ -177,7 +287,7 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
         return `
         <section class="post reply-post" data-post-id="${reply.id}">
         ${
-          reply.user.username === currentUser.username
+          reply.user.username === this.#currentUser.username
             ? `
         <div class="score-container">
           <p class="score">${reply.score}</p>
@@ -192,21 +302,21 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
           <button class="btn btn-minus">
             <img src="img/icon-minus.svg" alt="Minus icon" />
           </button>
-        </div> 
+        </div>
           `
         }
           <div class="post-main">
           ${
-            reply.user.username === currentUser.username
+            reply.user.username === this.#currentUser.username
               ? `
           <header class="post-header">
           <div class="user-info">
             <img
               class="avatar"
-              src="${currentUser.image.webp}"
+              src="${this.#currentUser.image.webp}"
               alt="User avatar"
             />
-            <p class="author">${currentUser.username}</p>
+            <p class="author">${this.#currentUser.username}</p>
             <p class="author-own">you</p>
             <p class="date">${reply.createdAt}</p>
           </div>
@@ -233,7 +343,7 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
            <p class="author">${reply.user.username}</p>
            <p class="date">${reply.createdAt}</p>
           </div>
-    
+
           <button class="btn-reply">
             <img src="img/icon-reply.svg" alt="Reply icon" />
               Reply
@@ -254,12 +364,11 @@ const generateCommentMarkup = function (comment, position = "afterbegin") {
       .join("")}
     </section>
   `;
+      postsContainer.insertAdjacentHTML(position, markup);
+    }
 
-  postsContainer.insertAdjacentHTML(position, markup);
-};
-
-const generateReplyMarkup = function () {
-  return `
+    _generateReplyMarkup() {
+      return `
   <section class="add-comment">
       <section class="parent-post">
         <img
@@ -276,146 +385,11 @@ const generateReplyMarkup = function () {
           <button class="btn-submit" type="submit">Reply</button>
         </form>
       </section>
-    </section>
+  </section>
   `;
-};
-
-// Rendering
-const renderComments = function () {
-  comments.forEach((comment) => generateCommentMarkup(comment));
-};
-renderComments();
-
-// Scores
-const handleScore = function (e) {
-  // Refactor this mess later
-  const currentComment = comments.find(
-    (comment) => comment.id === +e.currentTarget.closest(".post").dataset.postId
-  );
-  const scoreEl = e.currentTarget.querySelector(".score");
-  const btnPlus = e.target.closest(".btn-plus");
-  const btnMinus = e.target.closest(".btn-minus");
-
-  if (!currentComment) {
-    let [currentReply] = comments.map((comment) => {
-      return comment.replies.find(
-        (reply) => reply.id === +e.currentTarget.closest(".post").dataset.postId
-      );
-    });
-
-    if (btnPlus) {
-      currentReply.score += 1;
     }
-    if (btnMinus) {
-      currentReply.score -= 1;
-    }
-    scoreEl.textContent = currentReply.score;
-    return;
   }
 
-  if (btnPlus) {
-    currentComment.score += 1;
-  }
-  if (btnMinus) {
-    currentComment.score -= 1;
-  }
-  scoreEl.textContent = currentComment.score;
+  const app = new App();
 };
-
-newCommentForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const newComment = {
-    id: Math.trunc(Math.random() * 100),
-    content: newCommentInput.value,
-    createdAt: "Now",
-    replies: [],
-    score: 0,
-    user: currentUser,
-  };
-
-  newCommentInput.value = "";
-  comments.push(newComment);
-
-  generateCommentMarkup(newComment);
-  addHandlers();
-});
-
-const handleReply = function (e) {
-  const btn = document.querySelectorAll(".btn-reply");
-  btn.forEach((btn) => (btn.disabled = true));
-
-  const parentElement = e.target.closest(".post");
-  const replyingToId = parentElement.dataset.postId;
-
-  parentElement.insertAdjacentHTML("afterend", generateReplyMarkup());
-
-  const replyForm = document.querySelector(".reply-form");
-  const replyInput = replyForm.querySelector(".comment-input");
-  const receiverOP = comments.find((comment) => comment.id === +replyingToId);
-  const [receiverReplier] = comments.map((comment) => {
-    return comment.replies.find((reply) => reply.id === +replyingToId);
-  });
-
-  const originalPoster = comments.find(
-    (comment) => comment.id === receiverReplier?.originalPosterId
-  );
-
-  replyForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const newReply = {
-      id: Math.trunc(Math.random() * 100),
-      content: replyInput.value,
-      createdAt: "Now",
-      replyingTo: receiverOP
-        ? receiverOP.user.username
-        : receiverReplier.user.username,
-      score: 0,
-      user: currentUser,
-    };
-
-    receiverOP
-      ? receiverOP.replies.push(newReply)
-      : originalPoster.replies.push(newReply);
-
-    postsContainer.innerHTML = "";
-    comments.forEach((comment) => generateCommentMarkup(comment));
-
-    // Rebuild handlers
-    addHandlers();
-  });
-};
-
-const handleDelete = function (e) {
-  const parentElement = e.target.closest(".post");
-  const [post] = comments.map((comment) => {
-    return comment.replies.find(
-      (reply) => +parentElement.dataset.postId === reply.id
-    );
-  });
-  const [postIndex] = comments.map((comment) => {
-    return comment.replies.findIndex(
-      (reply) => +parentElement.dataset.postId === reply.id
-    );
-  });
-
-  comments.forEach((comment) => {
-    comment.replies.includes(post) ? comment.replies.splice(postIndex, 1) : "";
-  });
-
-  parentElement.remove();
-};
-
-const addHandlers = function () {
-  const scoreContainer = document.querySelectorAll(".score-container");
-  const deleteBtn = document.querySelectorAll(".btn-delete");
-  const replyBtn = document.querySelectorAll(".btn-reply");
-
-  scoreContainer.forEach((score) =>
-    score.addEventListener("click", handleScore)
-  );
-  deleteBtn.forEach((btn) => btn.addEventListener("click", handleDelete));
-  replyBtn.forEach((btn) => btn.addEventListener("click", handleReply));
-};
-addHandlers();
+main();
