@@ -22,19 +22,27 @@ const main = async function () {
   await loadData();
 
   class App {
-    #currentUser = currentUser;
-    #comments = comments;
+    #currentUser;
+    #comments;
     #target;
     #parentElement;
 
     constructor() {
-      this._sortByScore();
-      this._renderComments();
-      this._addHandlers();
+      this._setInit();
+      this._getLocalStorage();
+
+      console.log(this.#comments);
+      console.log(this.#currentUser);
+
       newCommentForm.addEventListener(
         "submit",
         this._handleNewComment.bind(this)
       );
+    }
+
+    _setInit() {
+      this.#currentUser = currentUser;
+      this.#comments = comments;
     }
 
     _sortByScore() {
@@ -102,6 +110,8 @@ const main = async function () {
         currentComment.score -= 1;
       }
       scoreEl.textContent = currentComment.score;
+
+      this._setLocalStorage();
     }
 
     _handleNewComment(e) {
@@ -121,21 +131,49 @@ const main = async function () {
 
       this._generateCommentMarkup(newComment);
       this._addHandlers();
+      this._setLocalStorage();
     }
 
     _handleDelete(e) {
       this.#parentElement = e.target.closest(".post");
 
-      const [post] = this.#comments.map((comment) => {
-        return comment.replies.find(
-          (reply) => +this.#parentElement.dataset.postId === reply.id
+      const postArr =
+        this.#comments.map((comment) => {
+          return comment.replies.find(
+            (reply) => +this.#parentElement.dataset.postId === reply.id
+          );
+        }) ||
+        this.#comments.find(
+          (comment) => +this.#parentElement.dataset.postId === comment.id
         );
-      });
-      const [postIndex] = this.#comments.map((comment) => {
-        return comment.replies.findIndex(
-          (reply) => +this.#parentElement.dataset.postId === reply.id
+      const postIndexArr =
+        this.#comments.map((comment) => {
+          return comment.replies.findIndex(
+            (reply) => +this.#parentElement.dataset.postId === reply.id
+          );
+        }) ||
+        this.#comments.findIndex(
+          (comment) => +this.#parentElement.dataset.postId === comment.id
         );
-      });
+
+      const post = postArr.find((post) => post !== undefined);
+      const postIndex = postIndexArr.find((index) => index !== -1);
+
+      console.log("============");
+      console.log(
+        this.#comments.map((comment) => {
+          return comment.replies.find(
+            (reply) => +this.#parentElement.dataset.postId === reply.id
+          );
+        }) ||
+          this.#comments.find(
+            (comment) => +this.#parentElement.dataset.postId === comment.id
+          )
+      );
+      console.log(this.#parentElement);
+      console.log(postArr);
+      console.log(postIndexArr);
+      console.log(this.#comments);
 
       this.#comments.forEach((comment) => {
         comment.replies.includes(post)
@@ -143,6 +181,7 @@ const main = async function () {
           : "";
       });
 
+      this._setLocalStorage();
       this.#parentElement.remove();
     }
 
@@ -196,6 +235,7 @@ const main = async function () {
 
         // Rebuild handlers
         this._addHandlers();
+        this._setLocalStorage();
       });
     }
 
@@ -206,7 +246,7 @@ const main = async function () {
       const commentEl = this.#parentElement.querySelector(".comment");
       const commentId = +this.#parentElement.dataset.postId;
 
-      const comment = this.#comments.find(
+      const commentsArr = this.#comments.find(
         (comment) => comment.id === commentId
       ) || [
         ...this.#comments.map((comment) =>
@@ -216,9 +256,15 @@ const main = async function () {
       const commentIndex = this.#comments.findIndex(
         (comment) => comment.id === commentId
       );
-      const [replyIndex] = this.#comments.map((comm) => {
+      const replyIndexesArr = this.#comments.map((comm) => {
         return comm.replies.findIndex((reply) => reply.id == commentId);
       });
+
+      const comment = commentsArr.find((comment) => comment !== undefined);
+      const replyIndex = replyIndexesArr.find((index) => index !== -1);
+
+      console.log(comment);
+      console.log(replyIndex);
 
       commentEl.setAttribute("contenteditable", true);
 
@@ -248,12 +294,13 @@ const main = async function () {
           if (!this.#comments.includes(comment)) {
             this.#comments.forEach(
               (comm) =>
-                comm.replies.includes(comment[0]) &&
+                comm.replies.includes(comment) &&
                 (comm.replies[replyIndex].content = newContent)
             );
           }
           console.log(this.#comments);
           console.log(newContent);
+          this._setLocalStorage();
         },
         {
           once: true,
@@ -264,7 +311,7 @@ const main = async function () {
     _generateCommentMarkup(comment, position = "afterbegin") {
       const markup = `
   ${
-    comment.user === currentUser
+    JSON.stringify(comment.user) === JSON.stringify(this.#currentUser)
       ? `
       <section class="post post-own" author="${
         comment.user.username
@@ -461,6 +508,22 @@ const main = async function () {
       </section>
   </section>
   `;
+    }
+
+    _setLocalStorage() {
+      localStorage.setItem("comments", JSON.stringify(this.#comments));
+    }
+
+    _getLocalStorage() {
+      const dataComments = JSON.parse(localStorage.getItem("comments"));
+
+      if (!dataComments) return;
+
+      this.#comments = dataComments;
+
+      this._sortByScore();
+      this._renderComments();
+      this._addHandlers();
     }
   }
 
