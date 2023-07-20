@@ -137,49 +137,39 @@ const main = async function () {
     _handleDelete(e) {
       this.#parentElement = e.target.closest(".post");
 
-      const postArr =
-        this.#comments.map((comment) => {
-          return comment.replies.find(
-            (reply) => +this.#parentElement.dataset.postId === reply.id
-          );
-        }) ||
-        this.#comments.find(
-          (comment) => +this.#parentElement.dataset.postId === comment.id
-        );
-      const postIndexArr =
-        this.#comments.map((comment) => {
-          return comment.replies.findIndex(
-            (reply) => +this.#parentElement.dataset.postId === reply.id
-          );
-        }) ||
-        this.#comments.findIndex(
-          (comment) => +this.#parentElement.dataset.postId === comment.id
-        );
-
-      const post = postArr.find((post) => post !== undefined);
-      const postIndex = postIndexArr.find((index) => index !== -1);
-
-      console.log("============");
-      console.log(
-        this.#comments.map((comment) => {
-          return comment.replies.find(
-            (reply) => +this.#parentElement.dataset.postId === reply.id
-          );
-        }) ||
-          this.#comments.find(
-            (comment) => +this.#parentElement.dataset.postId === comment.id
-          )
+      const post = this.#comments.find(
+        (comment) => +this.#parentElement.dataset.postId === comment.id
       );
-      console.log(this.#parentElement);
-      console.log(postArr);
-      console.log(postIndexArr);
-      console.log(this.#comments);
-
-      this.#comments.forEach((comment) => {
-        comment.replies.includes(post)
-          ? comment.replies.splice(postIndex, 1)
-          : "";
+      const postRepliesArr = this.#comments.map((comment) => {
+        return comment.replies.find(
+          (reply) => +this.#parentElement.dataset.postId === reply.id
+        );
       });
+      const postIndex = this.#comments.findIndex(
+        (comment) => +this.#parentElement.dataset.postId === comment.id
+      );
+      const postRepliesIndexArr = this.#comments.map((comment) => {
+        return comment.replies.findIndex(
+          (reply) => +this.#parentElement.dataset.postId === reply.id
+        );
+      });
+
+      const postReply = postRepliesArr.find((post) => post !== undefined);
+      const postReplyIndex = postRepliesIndexArr.find((index) => index !== -1);
+
+      if (post) {
+        this.#comments.forEach((comment) => {
+          comment === post ? this.#comments.splice(postIndex, 1) : "";
+        });
+      }
+
+      if (postReply) {
+        this.#comments.forEach((comment) => {
+          comment.replies.includes(postReply)
+            ? comment.replies.splice(postReplyIndex, 1)
+            : "";
+        });
+      }
 
       this._setLocalStorage();
       this.#parentElement.remove();
