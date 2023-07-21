@@ -26,14 +26,13 @@ const main = async function () {
     #comments;
     #target;
     #parentElement;
+    #date = new Date();
+    #now = `${this.#date.getDate()}/${this.#date.getMonth()}/${this.#date.getFullYear()} ${this.#date.getHours()}:${this.#date.getMinutes()}`;
 
     constructor() {
       this._setInit();
       this._getLocalStorage();
       this._setLocalStorage();
-
-      console.log(this.#comments);
-      console.log(this.#currentUser);
 
       newCommentForm.addEventListener(
         "submit",
@@ -126,14 +125,14 @@ const main = async function () {
     _handleNewComment(e) {
       e.preventDefault();
 
-      if (!newCommentInput.input) {
+      if (newCommentInput.value.trim() === "") {
         return;
       }
 
       const newComment = {
         id: Math.trunc(Math.random() * 100),
         content: newCommentInput.value,
-        createdAt: "Now",
+        createdAt: this.#now,
         replies: [],
         score: 0,
         user: this.#currentUser,
@@ -223,7 +222,7 @@ const main = async function () {
         const newReply = {
           id: Math.trunc(Math.random() * 100),
           content: replyInput.value,
-          createdAt: "Now",
+          createdAt: this.#now,
           replyingTo: receiverOP
             ? receiverOP.user.username
             : receiverReplier.user.username,
@@ -270,7 +269,7 @@ const main = async function () {
       const postReplyIndex = postReplyIndexesArr.find((index) => index !== -1);
 
       content.setAttribute("contenteditable", true);
-      replyingTo.setAttribute("contenteditable", false);
+      replyingTo?.setAttribute("contenteditable", false);
 
       editBtn.classList.add("hidden");
       applyBtn.classList.remove("hidden");
@@ -351,7 +350,7 @@ const main = async function () {
 
         <div class="comment-container">
           <p class="comment">
-            ${comment.content}
+            <span class="content"> ${comment.content}</span>
           </p>
         </div>
       </div>
@@ -390,7 +389,7 @@ const main = async function () {
 
           <div class="comment-container">
             <p class="comment">
-              ${comment.content}
+            <span class="content">${comment.content}</span>
             </p>
           </div>
         </div>
