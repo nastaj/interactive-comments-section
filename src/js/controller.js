@@ -30,6 +30,7 @@ const main = async function () {
     constructor() {
       this._setInit();
       this._getLocalStorage();
+      this._setLocalStorage();
 
       console.log(this.#comments);
       console.log(this.#currentUser);
@@ -86,12 +87,16 @@ const main = async function () {
       const btnMinus = this.#target.closest(".btn-minus");
 
       if (!currentComment) {
-        let [currentReply] = this.#comments.map((comment) => {
+        const currentReplyArr = this.#comments.map((comment) => {
           return comment.replies.find(
             (reply) =>
               reply.id === +this.#parentElement.closest(".post").dataset.postId
           );
         });
+
+        const currentReply = currentReplyArr.find(
+          (reply) => reply !== undefined
+        );
 
         if (btnPlus) {
           currentReply.score += 1;
@@ -99,23 +104,31 @@ const main = async function () {
         if (btnMinus) {
           currentReply.score -= 1;
         }
+
         scoreEl.textContent = currentReply.score;
+        this._setLocalStorage();
         return;
       }
 
-      if (btnPlus) {
-        currentComment.score += 1;
-      }
-      if (btnMinus) {
-        currentComment.score -= 1;
-      }
-      scoreEl.textContent = currentComment.score;
+      if (currentComment) {
+        if (btnPlus) {
+          currentComment.score += 1;
+        }
+        if (btnMinus) {
+          currentComment.score -= 1;
+        }
 
-      this._setLocalStorage();
+        scoreEl.textContent = currentComment.score;
+        this._setLocalStorage();
+      }
     }
 
     _handleNewComment(e) {
       e.preventDefault();
+
+      if (!newCommentInput.input) {
+        return;
+      }
 
       const newComment = {
         id: Math.trunc(Math.random() * 100),
@@ -203,6 +216,10 @@ const main = async function () {
       replyForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
+        if (replyInput.value.trim() === "") {
+          return;
+        }
+
         const newReply = {
           id: Math.trunc(Math.random() * 100),
           content: replyInput.value,
@@ -233,30 +250,27 @@ const main = async function () {
       this.#parentElement = e.target.closest(".post");
       const editBtn = e.currentTarget;
       const applyBtn = this.#parentElement.querySelector(".btn-apply");
-      const commentEl = this.#parentElement.querySelector(".comment");
+      const content = this.#parentElement.querySelector(".content");
       const commentId = +this.#parentElement.dataset.postId;
+      const replyingTo = this.#parentElement.querySelector(".replying-to");
 
-      const commentsArr = this.#comments.find(
-        (comment) => comment.id === commentId
-      ) || [
-        ...this.#comments.map((comment) =>
-          comment.replies.find((reply) => reply.id === commentId)
-        ),
-      ];
-      const commentIndex = this.#comments.findIndex(
+      const post = this.#comments.find((comment) => comment.id === commentId);
+      const postRepliesArr = this.#comments.map((comment) =>
+        comment.replies.find((reply) => reply.id === commentId)
+      );
+
+      const postIndex = this.#comments.findIndex(
         (comment) => comment.id === commentId
       );
-      const replyIndexesArr = this.#comments.map((comm) => {
+      const postReplyIndexesArr = this.#comments.map((comm) => {
         return comm.replies.findIndex((reply) => reply.id == commentId);
       });
 
-      const comment = commentsArr.find((comment) => comment !== undefined);
-      const replyIndex = replyIndexesArr.find((index) => index !== -1);
+      const postReply = postRepliesArr.find((comment) => comment !== undefined);
+      const postReplyIndex = postReplyIndexesArr.find((index) => index !== -1);
 
-      console.log(comment);
-      console.log(replyIndex);
-
-      commentEl.setAttribute("contenteditable", true);
+      content.setAttribute("contenteditable", true);
+      replyingTo.setAttribute("contenteditable", false);
 
       editBtn.classList.add("hidden");
       applyBtn.classList.remove("hidden");
@@ -264,28 +278,24 @@ const main = async function () {
       applyBtn.addEventListener(
         "click",
         () => {
-          commentEl.setAttribute("contenteditable", false);
+          content.setAttribute("contenteditable", false);
 
           editBtn.classList.remove("hidden");
           applyBtn.classList.add("hidden");
 
-          const newContent = commentEl.textContent
-            .trim()
-            .split("\n              ")
-            .slice(1)
-            .join("");
+          const newContent = content.textContent.trim();
 
-          console.log(this.#comments.includes(comment));
+          console.log(this.#comments.includes(post));
 
-          if (this.#comments.includes(comment)) {
-            this.#comments[commentIndex].content = commentEl.textContent;
+          if (this.#comments.includes(post)) {
+            this.#comments[postIndex].content = content.textContent;
           }
 
-          if (!this.#comments.includes(comment)) {
+          if (!this.#comments.includes(post)) {
             this.#comments.forEach(
               (comm) =>
-                comm.replies.includes(comment) &&
-                (comm.replies[replyIndex].content = newContent)
+                comm.replies.includes(postReply) &&
+                (comm.replies[postReplyIndex].content = newContent)
             );
           }
           console.log(this.#comments);
@@ -465,7 +475,7 @@ const main = async function () {
           <div class="comment-container">
             <p class="comment">
               <span class="replying-to">@${reply.replyingTo}</span>
-              ${reply.content}
+              <span class="content"> ${reply.content}</span>
             </p>
           </div>
           </div>
