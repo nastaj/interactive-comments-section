@@ -165,3 +165,49 @@ body {
 .hidden {
   display: none;
 }
+
+.popup {
+  position: fixed;
+  text-align: center;
+
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.6rem;
+  padding: 1.5rem 0;
+  width: 50%;
+}
+
+@keyframes append-animate {
+  0% {
+    top: -20%;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+@keyframes hide-animate {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: -20%;
+    visibility: hidden;
+  }
+}
+
+.new-popup {
+  animation: append-animate 0.3s ease-in;
+}
+
+.hide-popup {
+  animation: hide-animate 0.3s ease-out;
+}
+
+.success-popup {
+  background-color: rgba(140, 233, 154, 0.7);
+}
+
+.error-popup {
+  background-color: hsla(358, 79%, 66%, 0.4);
+}

@@ -27,7 +27,10 @@ const main = async function () {
     #target;
     #parentElement;
     #date = new Date();
-    #now = `${this.#date.getDate()}/${this.#date.getMonth()}/${this.#date.getFullYear()} ${this.#date.getHours()}:${this.#date.getMinutes()}`;
+    #now = `${this.#date.getDate()}/${this.#date.getMonth()}/${this.#date.getFullYear()} ${this.#date.getHours()}:${String(
+      this.#date.getMinutes()
+    ).padStart(2, 0)}`;
+    #popup;
 
     constructor() {
       this._setInit();
@@ -126,6 +129,7 @@ const main = async function () {
       e.preventDefault();
 
       if (newCommentInput.value.trim() === "") {
+        this._togglePopup("error", "❌ Comment cannot be empty!");
         return;
       }
 
@@ -140,6 +144,8 @@ const main = async function () {
 
       newCommentInput.value = "";
       this.#comments.push(newComment);
+
+      this._togglePopup("success", "✅ Post successfully sent!");
 
       this._generateCommentMarkup(newComment);
       this._addHandlers();
@@ -216,6 +222,7 @@ const main = async function () {
         e.preventDefault();
 
         if (replyInput.value.trim() === "") {
+          this._togglePopup("error", "❌ Comment cannot be empty!");
           return;
         }
 
@@ -238,6 +245,8 @@ const main = async function () {
         this.#comments.forEach((comment) =>
           this._generateCommentMarkup(comment)
         );
+
+        this._togglePopup("success", "✅ Post successfully sent!");
 
         // Rebuild handlers
         this._addHandlers();
@@ -507,6 +516,32 @@ const main = async function () {
       </section>
   </section>
   `;
+    }
+
+    _togglePopup(state = "error", msg) {
+      const markup = `
+      <div class="popup ${
+        state === "success" ? "success" : "error"
+      }-popup new-popup">
+        <p>${msg}</p>
+      </div>
+      `;
+      appContainer.insertAdjacentHTML("beforebegin", markup);
+
+      const popup = document.querySelector(".popup");
+      this._hidePopup(popup);
+    }
+
+    async _hidePopup(popup) {
+      await this._pause(3);
+      popup.classList.add("hide-popup");
+      await this._pause(0.2);
+      popup.style.visibility = "hidden";
+      popup.remove();
+    }
+
+    _pause(seconds) {
+      return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
     }
 
     _setLocalStorage() {
