@@ -26,11 +26,6 @@ const main = async function () {
     #comments;
     #target;
     #parentElement;
-    #date = new Date();
-    #now = `${this.#date.getDate()}/${this.#date.getMonth()}/${this.#date.getFullYear()} ${this.#date.getHours()}:${String(
-      this.#date.getMinutes()
-    ).padStart(2, 0)}`;
-    #popup;
 
     constructor() {
       this._setInit();
@@ -136,7 +131,7 @@ const main = async function () {
       const newComment = {
         id: Math.trunc(Math.random() * 100),
         content: newCommentInput.value,
-        createdAt: this.#now,
+        createdAt: "Today",
         replies: [],
         score: 0,
         user: this.#currentUser,
@@ -147,7 +142,9 @@ const main = async function () {
 
       this._togglePopup("success", "✅ Post successfully sent!");
 
-      this._generateCommentMarkup(newComment);
+      postsContainer.innerHTML = "";
+      this.#comments.forEach((comment) => this._generateCommentMarkup(comment));
+
       this._addHandlers();
       this._setLocalStorage();
     }
@@ -259,7 +256,7 @@ const main = async function () {
         const newReply = {
           id: Math.trunc(Math.random() * 100),
           content: replyInput.value,
-          createdAt: this.#now,
+          createdAt: "Today",
           replyingTo: receiverOP
             ? receiverOP.user.username
             : receiverReplier.user.username,
@@ -529,8 +526,8 @@ const main = async function () {
 
     _generateReplyMarkup() {
       return `
-  <section class="add-comment">
-      <section class="parent-post">
+  <section class="add-reply">
+      <section class="reply-post">
         <img
           class="avatar"
           src="img/avatars/image-juliusomo.webp"
@@ -559,8 +556,8 @@ const main = async function () {
       `;
       appContainer.insertAdjacentHTML("beforebegin", markup);
 
-      const popup = document.querySelector(".popup");
-      this._hidePopup(popup);
+      const popups = document.querySelectorAll(".popup");
+      popups.forEach((popup) => this._hidePopup(popup));
     }
 
     async _hidePopup(popup) {

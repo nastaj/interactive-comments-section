@@ -339,4 +339,64 @@ body {
 }
 .confirmation-box .btn-cancel:hover {
   background-color: hsl(228, 33%, 97%);
+}
+
+.add-reply {
+  max-width: 64.7rem;
+}
+
+.reply-post {
+  gap: 3.2rem;
+}
+
+.comment-input {
+  margin-bottom: 1.6rem;
+}
+
+@media (max-width: 525px) {
+  .container {
+    display: block;
+  }
+  .parent-post {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6rem;
+    width: 100%;
+  }
+  .replies-container {
+    margin-left: 1rem;
+    padding-left: 1.6rem;
+  }
+  .score-container {
+    width: 7rem;
+    height: 7rem;
+  }
+  .reply-post {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6rem;
+    width: 100%;
+  }
+  .post-main {
+    gap: 2rem;
+  }
+  .post-header {
+    flex-direction: column;
+  }
+  .comment-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .comment-input {
+    width: 100%;
+  }
+  .avatar {
+    height: 4.8rem;
+  }
+  .confirmation-box {
+    position: fixed;
+    width: 25rem;
+    height: 25rem;
+  }
 }/*# sourceMappingURL=main.css.map */
