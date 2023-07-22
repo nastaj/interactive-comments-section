@@ -7,6 +7,7 @@ body {
 }
 
 .container {
+  position: relative;
   min-height: 100vh;
   @include flexCenter(column);
   padding: 3.2rem 0;
@@ -175,6 +176,7 @@ body {
   font-size: 1.6rem;
   padding: 1.5rem 0;
   width: 50%;
+  z-index: 999;
 }
 
 @keyframes append-animate {
@@ -210,4 +212,55 @@ body {
 
 .error-popup {
   background-color: hsla(358, 79%, 66%, 0.4);
+}
+
+.overlay {
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+.confirmation-box {
+  position: absolute;
+  display: grid;
+  text-align: center;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+  background-color: $white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  font-size: $paragraph-default;
+  padding: 3.2rem;
+  box-shadow: 0px 0px 50px 20px rgba(66, 68, 90, 0.3);
+  border-radius: 1.2rem;
+
+  p {
+    grid-column: span 2;
+  }
+
+  .btn-delete-confirm {
+    border: none;
+    background-color: hsl(358, 64%, 61%);
+    color: $white;
+    cursor: pointer;
+    border-radius: 0.4rem;
+    transition: 0.1s all;
+  }
+
+  .btn-delete-confirm:hover {
+    background-color: $red-soft;
+  }
+
+  .btn-cancel {
+    border: none;
+    background-color: $gray-light-1;
+    cursor: pointer;
+    border-radius: 0.4rem;
+    transition: 0.1s all;
+  }
+
+  .btn-cancel:hover {
+    background-color: $gray-light-2;
+  }
 }

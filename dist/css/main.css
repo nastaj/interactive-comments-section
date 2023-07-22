@@ -85,6 +85,7 @@ body {
 }
 
 .container {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -258,6 +259,7 @@ body {
   font-size: 1.6rem;
   padding: 1.5rem 0;
   width: 50%;
+  z-index: 999;
 }
 
 @keyframes append-animate {
@@ -291,4 +293,50 @@ body {
 
 .error-popup {
   background-color: hsla(358, 79%, 66%, 0.4);
+}
+
+.overlay {
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+.confirmation-box {
+  position: absolute;
+  display: grid;
+  text-align: center;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+  background-color: hsl(0, 0%, 100%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  font-size: 16px;
+  padding: 3.2rem;
+  box-shadow: 0px 0px 50px 20px rgba(66, 68, 90, 0.3);
+  border-radius: 1.2rem;
+}
+.confirmation-box p {
+  grid-column: span 2;
+}
+.confirmation-box .btn-delete-confirm {
+  border: none;
+  background-color: hsl(358, 64%, 61%);
+  color: hsl(0, 0%, 100%);
+  cursor: pointer;
+  border-radius: 0.4rem;
+  transition: 0.1s all;
+}
+.confirmation-box .btn-delete-confirm:hover {
+  background-color: hsl(358, 79%, 66%);
+}
+.confirmation-box .btn-cancel {
+  border: none;
+  background-color: hsl(223, 19%, 93%);
+  cursor: pointer;
+  border-radius: 0.4rem;
+  transition: 0.1s all;
+}
+.confirmation-box .btn-cancel:hover {
+  background-color: hsl(228, 33%, 97%);
 }/*# sourceMappingURL=main.css.map */

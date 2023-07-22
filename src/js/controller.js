@@ -66,7 +66,7 @@ const main = async function () {
         score.addEventListener("click", this._handleScore.bind(this))
       );
       deleteBtn.forEach((btn) =>
-        btn.addEventListener("click", this._handleDelete.bind(this))
+        btn.addEventListener("click", this._toggleConfirmation.bind(this))
       );
       replyBtn.forEach((btn) =>
         btn.addEventListener("click", this._handleReply.bind(this))
@@ -152,6 +152,35 @@ const main = async function () {
       this._setLocalStorage();
     }
 
+    _toggleConfirmation(e) {
+      appContainer.classList.add("overlay");
+
+      const markup = `
+      <div class="confirmation-box">
+        <p>Are you sure you want to delete this post?</p>
+        <p>This action is irreversible!</p>
+        <button class="btn-delete-confirm">Delete</button>
+        <button class="btn-cancel">Cancel</button>
+      </div>
+      `;
+      appContainer.insertAdjacentHTML("beforebegin", markup);
+
+      const confirmationBox = document.querySelector(".confirmation-box");
+      const btnConfirm = document.querySelector(".btn-delete-confirm");
+      const btnCancel = document.querySelector(".btn-cancel");
+
+      btnConfirm.addEventListener("click", () => {
+        this._handleDelete(e);
+        appContainer.classList.remove("overlay");
+        confirmationBox.remove();
+      });
+
+      btnCancel.addEventListener("click", () => {
+        appContainer.classList.remove("overlay");
+        confirmationBox.remove();
+      });
+    }
+
     _handleDelete(e) {
       this.#parentElement = e.target.closest(".post");
 
@@ -189,6 +218,7 @@ const main = async function () {
         });
       }
 
+      this._togglePopup("success", "✅ Comment deleted!");
       this._setLocalStorage();
       this.#parentElement.remove();
     }
@@ -308,6 +338,7 @@ const main = async function () {
           }
           console.log(this.#comments);
           console.log(newContent);
+          this._togglePopup("success", "✅ Comment edited!");
           this._setLocalStorage();
         },
         {
