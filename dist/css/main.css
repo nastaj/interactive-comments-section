@@ -200,6 +200,7 @@ body {
   border: none;
   background: none;
   cursor: pointer;
+  transition: 0.1s all;
 }
 
 .btn-reply,
@@ -245,6 +246,14 @@ body {
   padding: 1rem 2.4rem;
   border-radius: 0.8rem;
   cursor: pointer;
+  transition: 0.1s all;
+}
+
+.btn-submit:hover,
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-reply:hover {
+  opacity: 0.5;
 }
 
 .hidden {
@@ -356,6 +365,7 @@ body {
 @media (max-width: 525px) {
   .container {
     display: block;
+    padding: 0 1.6rem;
   }
   .parent-post {
     flex-direction: column;

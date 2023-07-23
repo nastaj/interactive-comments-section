@@ -38,11 +38,13 @@ const main = async function () {
       );
     }
 
+    // Loads initial data from json file into the class
     _setInit() {
       this.#currentUser = currentUser;
       this.#comments = comments;
     }
 
+    // Sorts parent posts by score
     _sortByScore() {
       this.#comments.sort((a, b) => a.score - b.score);
     }
@@ -51,6 +53,7 @@ const main = async function () {
       this.#comments.forEach((comment) => this._generateCommentMarkup(comment));
     }
 
+    // Handlers for every button
     _addHandlers() {
       const scoreContainer = document.querySelectorAll(".score-container");
       const deleteBtn = document.querySelectorAll(".btn-delete");
@@ -75,15 +78,32 @@ const main = async function () {
       this.#target = e.target;
       this.#parentElement = e.currentTarget;
 
+      // Link score with correct top-level comment
       const currentComment = this.#comments.find(
         (comment) =>
           comment.id === +this.#parentElement.closest(".post").dataset.postId
       );
+
       const scoreEl = this.#parentElement.querySelector(".score");
       const btnPlus = this.#target.closest(".btn-plus");
       const btnMinus = this.#target.closest(".btn-minus");
 
+      // If top-level comment
+      if (currentComment) {
+        if (btnPlus) {
+          currentComment.score += 1;
+        }
+        if (btnMinus) {
+          currentComment.score -= 1;
+        }
+
+        scoreEl.textContent = currentComment.score;
+        this._setLocalStorage();
+      }
+
+      // If not top-level comment
       if (!currentComment) {
+        // Link score with correct comment reply
         const currentReplyArr = this.#comments.map((comment) => {
           return comment.replies.find(
             (reply) =>
@@ -91,6 +111,7 @@ const main = async function () {
           );
         });
 
+        // Workaround for array of undefined values and one relevant object
         const currentReply = currentReplyArr.find(
           (reply) => reply !== undefined
         );
@@ -104,32 +125,21 @@ const main = async function () {
 
         scoreEl.textContent = currentReply.score;
         this._setLocalStorage();
-        return;
-      }
-
-      if (currentComment) {
-        if (btnPlus) {
-          currentComment.score += 1;
-        }
-        if (btnMinus) {
-          currentComment.score -= 1;
-        }
-
-        scoreEl.textContent = currentComment.score;
-        this._setLocalStorage();
       }
     }
 
     _handleNewComment(e) {
       e.preventDefault();
 
+      // Guard clause for empty comment
       if (newCommentInput.value.trim() === "") {
         this._togglePopup("error", "❌ Comment cannot be empty!");
         return;
       }
 
+      // New comment object
       const newComment = {
-        id: Math.trunc(Math.random() * 100),
+        id: Math.trunc(Math.random() * 10000),
         content: newCommentInput.value,
         createdAt: "Today",
         replies: [],
@@ -138,17 +148,21 @@ const main = async function () {
       };
 
       newCommentInput.value = "";
+
       this.#comments.push(newComment);
 
       this._togglePopup("success", "✅ Post successfully sent!");
 
+      // Re-render DOM to correctly apply all handlers to newly created elements
       postsContainer.innerHTML = "";
-      this.#comments.forEach((comment) => this._generateCommentMarkup(comment));
-
+      this.#comments.forEach((comment) =>
+        this._generateCommentMarkup(comment, "beforeend")
+      );
       this._addHandlers();
       this._setLocalStorage();
     }
 
+    // Confirmation modal for comment deletion
     _toggleConfirmation(e) {
       appContainer.classList.add("overlay");
 
@@ -181,32 +195,42 @@ const main = async function () {
     _handleDelete(e) {
       this.#parentElement = e.target.closest(".post");
 
+      // Find correct top-level comment
       const post = this.#comments.find(
         (comment) => +this.#parentElement.dataset.postId === comment.id
       );
+
+      // Find correct reply-level comment (if not top-level)
       const postRepliesArr = this.#comments.map((comment) => {
         return comment.replies.find(
           (reply) => +this.#parentElement.dataset.postId === reply.id
         );
       });
+
+      // Find correct top-level index of a comment
       const postIndex = this.#comments.findIndex(
         (comment) => +this.#parentElement.dataset.postId === comment.id
       );
+
+      // Find correct reply-level index of a reply (if not top-level)
       const postRepliesIndexArr = this.#comments.map((comment) => {
         return comment.replies.findIndex(
           (reply) => +this.#parentElement.dataset.postId === reply.id
         );
       });
 
+      // Workaround for arrays of undefined values
       const postReply = postRepliesArr.find((post) => post !== undefined);
       const postReplyIndex = postRepliesIndexArr.find((index) => index !== -1);
 
+      // If top-level comment
       if (post) {
         this.#comments.forEach((comment) => {
           comment === post ? this.#comments.splice(postIndex, 1) : "";
         });
       }
 
+      // If reply-level comment
       if (postReply) {
         this.#comments.forEach((comment) => {
           comment.replies.includes(postReply)
@@ -221,26 +245,39 @@ const main = async function () {
     }
 
     _handleReply(e) {
+      // Disable reply buttons after the form is rendered to prevent rendering multiple forms
       const btn = document.querySelectorAll(".btn-reply");
       btn.forEach((btn) => (btn.disabled = true));
 
       this.#parentElement = e.target.closest(".post");
       const replyingToId = this.#parentElement.dataset.postId;
 
+      // Render reply form
       this.#parentElement.insertAdjacentHTML(
         "afterend",
         this._generateReplyMarkup()
       );
 
+      // DOM Form elements
       const replyForm = document.querySelector(".reply-form");
       const replyInput = replyForm.querySelector(".comment-input");
+
+      // Find reply receiver that is top-level original poster
       const receiverOP = this.#comments.find(
         (comment) => comment.id === +replyingToId
       );
-      const [receiverReplier] = this.#comments.map((comment) => {
+
+      // Find reply receiver that is another replier
+      const receiverReplierArr = this.#comments.map((comment) => {
         return comment.replies.find((reply) => reply.id === +replyingToId);
       });
 
+      // Workaround for array of undefined values
+      const receiverReplier = receiverReplierArr.find(
+        (receiver) => receiver !== undefined
+      );
+
+      // Find original poster
       const originalPoster = this.#comments.find(
         (comment) => comment.id === receiverReplier?.originalPosterId
       );
@@ -248,11 +285,13 @@ const main = async function () {
       replyForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
+        // Guard clause for empty reply
         if (replyInput.value.trim() === "") {
           this._togglePopup("error", "❌ Comment cannot be empty!");
           return;
         }
 
+        // New reply object
         const newReply = {
           id: Math.trunc(Math.random() * 100),
           content: replyInput.value,
@@ -264,10 +303,12 @@ const main = async function () {
           user: this.#currentUser,
         };
 
+        // Determine where the new object should be pushed
         receiverOP
           ? receiverOP.replies.push(newReply)
           : originalPoster.replies.push(newReply);
 
+        // Re-render DOM to correctly apply handlers to new elements
         postsContainer.innerHTML = "";
         this.#comments.forEach((comment) =>
           this._generateCommentMarkup(comment)
@@ -277,42 +318,55 @@ const main = async function () {
 
         // Rebuild handlers
         this._addHandlers();
+
         this._setLocalStorage();
       });
     }
 
     _handleEdit(e) {
       this.#parentElement = e.target.closest(".post");
+
+      // DOM Elements
       const editBtn = e.currentTarget;
       const applyBtn = this.#parentElement.querySelector(".btn-apply");
       const content = this.#parentElement.querySelector(".content");
       const commentId = +this.#parentElement.dataset.postId;
       const replyingTo = this.#parentElement.querySelector(".replying-to");
 
+      // Find correct top-level comment
       const post = this.#comments.find((comment) => comment.id === commentId);
+
+      // Find correct reply-level comment (if not top-level)
       const postRepliesArr = this.#comments.map((comment) =>
         comment.replies.find((reply) => reply.id === commentId)
       );
 
+      // Find correct top-level index of a comment
       const postIndex = this.#comments.findIndex(
         (comment) => comment.id === commentId
       );
+
+      // Find correct reply-level index of a reply (if not top-level)
       const postReplyIndexesArr = this.#comments.map((comm) => {
         return comm.replies.findIndex((reply) => reply.id == commentId);
       });
 
+      // Workaround for array of undefined values
       const postReply = postRepliesArr.find((comment) => comment !== undefined);
       const postReplyIndex = postReplyIndexesArr.find((index) => index !== -1);
 
+      // Turn on editing
       content.setAttribute("contenteditable", true);
       replyingTo?.setAttribute("contenteditable", false);
 
+      // Hide edit button / Show apply button
       editBtn.classList.add("hidden");
       applyBtn.classList.remove("hidden");
 
       applyBtn.addEventListener(
         "click",
         () => {
+          // Turn off editing
           content.setAttribute("contenteditable", false);
 
           editBtn.classList.remove("hidden");
@@ -320,12 +374,12 @@ const main = async function () {
 
           const newContent = content.textContent.trim();
 
-          console.log(this.#comments.includes(post));
-
+          // If editing top-level comment
           if (this.#comments.includes(post)) {
             this.#comments[postIndex].content = content.textContent;
           }
 
+          // If editing reply
           if (!this.#comments.includes(post)) {
             this.#comments.forEach(
               (comm) =>
@@ -333,8 +387,7 @@ const main = async function () {
                 (comm.replies[postReplyIndex].content = newContent)
             );
           }
-          console.log(this.#comments);
-          console.log(newContent);
+
           this._togglePopup("success", "✅ Comment edited!");
           this._setLocalStorage();
         },
@@ -546,6 +599,7 @@ const main = async function () {
   `;
     }
 
+    // Popup for success / error messages
     _togglePopup(state = "error", msg) {
       const markup = `
       <div class="popup ${
