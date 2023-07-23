@@ -29,6 +29,7 @@ const main = async function () {
 
     constructor() {
       this._setInit();
+
       this._getLocalStorage();
       this._setLocalStorage();
 
