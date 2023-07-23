@@ -634,9 +634,8 @@ const main = async function () {
     _getLocalStorage() {
       const dataComments = JSON.parse(localStorage.getItem("comments"));
 
-      if (!dataComments) return;
-
-      this.#comments = dataComments;
+      if (dataComments) this.#comments = dataComments;
+      if (!dataComments) this.#comments = comments;
 
       this._sortByScore();
       this._renderComments();
